@@ -8,9 +8,16 @@ library(cowplot)
 Stats <- read.table("Pangenom_general_stats.txt", header=TRUE, sep="\t", row.names = NULL)
 Stats
 
+
 ## Total genome Size and TE content (Mbp)
-Size <- ggplot(data=Stats, aes(x=Count, y=Genome, fill=Factor)) +
-  geom_bar(colour="black", stat="identity") + theme(legend.position = "top") + xlab("") + theme(legend.title= element_blank()) +
+Size <- ggplot(data=Stats, aes(x=Count, y=Genome, fill=Factor, group = Factor)) +
+  geom_bar(colour="black", stat="identity", position = "stack") + theme(legend.position = "top") + xlab("") + theme(legend.title= element_blank()) +
+  scale_fill_brewer(palette="Accent")
+
+Size
+
+Size <- ggplot(data=Stats, aes(x=Count, y=Genome, fill=factor(Factor, levels = c("Size(Mbp)","Intergenic_Space(Mbp)", "TE_content(Mbp)")))) +
+  geom_bar(colour="black", stat="identity", position = position_dodge(width = 0), width=2.5) + theme(legend.position = "top") + xlab("") + theme(legend.title= element_blank()) +
   scale_fill_brewer(palette="Accent")
 
 Size
