@@ -1,0 +1,515 @@
+library(pheatmap)
+library(ggplot2)
+library(ggforce)
+library(cowplot)
+
+heatmap_data <- read.csv("Single_Copy_RNAseq_ref.csv", row.names=1)
+heatmap_data
+
+BdDV1 <- c("Infected", "Infected", "Infected",
+           "Infected","Infected", "Infected", 
+           "Infected","Infected", "Infected", 
+           "Infected","Infected", "Infected",
+           "Uninfected", "Uninfected", "Uninfected",
+           "Uninfected", "Uninfected", "Uninfected",
+           "Uninfected", "Uninfected", "Uninfected")
+Strain <- c("CLFT044", "CLFT044", "CLFT044","CLFT044", "CLFT044", "CLFT044","CLFT067", "CLFT067","CLFT067","CLFT067", "CLFT067","CLFT067","CLFT071", "CLFT071", "CLFT071","CLFT071", "CLFT071", "CLFT071","JEL423", "JEL423", "JEL423")
+Lineage <- c("BRAZIL","BRAZIL","BRAZIL","BRAZIL","BRAZIL","BRAZIL","BRAZIL","BRAZIL","BRAZIL","BRAZIL","BRAZIL","BRAZIL","BRAZIL","BRAZIL","BRAZIL","BRAZIL","BRAZIL","BRAZIL","GPL","GPL","GPL")
+Aligned_Genome <- c("JEL423","JEL423","JEL423",
+                    "CLFT044","CLFT044","CLFT044",
+                    "JEL423","JEL423","JEL423",
+                    "CLFT067","CLFT067","CLFT067",
+                    "JEL423","JEL423","JEL423",
+                    "CLFT071","CLFT071","CLFT071",
+                    "JEL423","JEL423","JEL423")
+sampd <- data.frame(Strain=Strain, Aligned_Genome=Aligned_Genome)
+sampd
+sampd#Strain <- factor(sampd$Strain, levels = c("CLFT067", "CLFT071"))
+
+ann_colors = list(
+  Strain = c(CLFT044="gold1",CLFT067="orange",CLFT071="chocolate1",JEL423="orchid"),
+  Aligned_Genome = c("CLFT044"="gold1","CLFT067"="orange","CLFT071"="chocolate1","JEL423"="orchid"))
+ann_colors
+
+rownames(sampd) <- colnames(heatmap_data)
+
+ph <- pheatmap(heatmap_data, cluster_rows=FALSE, show_rownames=TRUE,
+               fontsize_row = 10,fontsize_col = 10,
+               cluster_cols=FALSE, annotation_col=sampd, annotation_colors=ann_colors,main="log2 TPM of Single Copy Orthogroups")
+
+ph
+
+
+
+Technology <- c("Illumina","ONT","ONT","ONT","ONT","SANGER","SANGER", "SANGER")
+Species <- c("Homolaphlyctis polyrhiza","Polyrhizophydium stewartii", "Batrachochytrium dendrobatidis","Batrachochytrium dendrobatidis","Batrachochytrium dendrobatidis","Batrachochytrium dendrobatidis","Batrachochytrium dendrobatidis","Batrachochytrium dendrobatidis")
+Strain <- c("JEL142", "JEL0888", "CLFT044","CLFT067","CLFT071","JAM81","JEL423","RTP6")
+
+sampd <- data.frame(Technology=Technology, Species=Species, Strain=Strain)
+sampd#Strain <- factor(sampd$Strain, levels = c("CLFT067", "CLFT071"))
+
+ann_colors = list(
+  Technology = c(Illumina="grey95", SANGER="grey50", ONT="grey8"),
+  Species = c("Homolaphlyctis polyrhiza"="deepskyblue3", "Batrachochytrium dendrobatidis"="tomato3", "Polyrhizophydium stewartii"="seagreen4"),
+  Strain = c(JEL142="deepskyblue3",JEL0888="seagreen4", CLFT044="gold1",CLFT067="orange",CLFT071="chocolate1",JEL423="orchid",JAM81="pink", RTP6="blueviolet"))
+
+rownames(sampd) <- colnames(Figvals)
+
+Figvals
+
+ph <- pheatmap(Figvals, cluster_rows=FALSE,display_numbers = Figvals,fontsize_number = 12, show_rownames=TRUE,scale = "row",
+               fontsize_row = 10,fontsize_col = 0.1,
+               cluster_cols=FALSE, annotation_col=sampd, annotation_colors = ann_colors)
+
+ph
+
+dot_data <- read.csv("Ratio_Kallisto_alignment.csv", row.names=NULL)
+dot_data
+
+p<-ggplot(dot_data, aes(x=Strain, y=Ratio)) + 
+  geom_dotplot()
+p
+
+
+ggplot(dot_data, aes(x=Strain, y=Ratio)) + 
+  geom_violin(trim = FALSE)+
+  geom_dotplot(binaxis='y', stackdir='center')
+
+
+Fig1 <-ggplot(dot_data, aes(x=dot_data$Strain, y=dot_data$Ratio, col=dot_data$Strain))+ 
+  geom_point(size=3, alpha=0.5)+ #get all data points to show but make them transparent 
+  stat_summary(fun.y=mean,geom="point", size=4)+ #plot the mean
+  stat_summary(fun.data = mean_se,geom = "errorbar", size=0.5, #plot the standard error
+               alpha=0.7,position = position_dodge(0.01))+
+  theme_bw() + #make black and white
+  ylab("Ratio of Self to JEL423 TPM") +  #change yaxis label
+  theme(legend.position = "bottom", #put legend under graph
+        legend.title = element_blank(), #remove legend titles
+        text = element_text(size=18),
+        axis.title.x=element_blank(), #remove Plot title
+        axis.text.y = element_text(size=18, angle=45,hjust=0.5),
+        axis.text.x = element_text(size=18, angle=45, hjust=1))   
+Fig1
+
+
+bar_data <- read.csv("TPM_ratio_HISAT_CLFT044.csv", row.names=NULL)
+bar_data
+
+ggplot(bar_data, aes(x=factor(PID)), fill = TPM_Category)+
+  geom_bar(stat="count", width=0.7)+
+  theme_minimal()
+
+
+ggplot(bar_data, aes(x=PID, fill = TPM_Category))+
+  geom_bar(stat="count", width=0.5, position = "stack")+
+  theme_minimal()
+
+
+### HISAT TPM RATIO JEL423 vs. CLFT044 ####
+dot_data <- read.csv("TPM_ratio_HISAT_CLFT044.csv", row.names=NULL)
+dot_data
+
+dot_data
+
+p<-ggplot(dot_data, aes(x=X.RNA.Donor.Strain., y=HISAT_TPM_RATIO)) + 
+  geom_dotplot()
+p
+
+
+ggplot(dot_data, aes(x=Strain, y=Ratio)) + 
+  geom_violin(trim = FALSE)+
+  geom_dotplot(binaxis='y', stackdir='center')
+
+
+Fig1 <-ggplot(dot_data, aes(x=dot_data$X.RNA.Donor.Strain., y=dot_data$HISAT_TPM_RATIO, col=X.RNA.Donor.Strain.))+ scale_color_manual(values = "goldenrod") +
+  geom_point(size=5, alpha=0.75)+ #get all data points to show but make them transparent 
+  stat_summary(fun.y=mean,geom="point", size=5, color="green3")+ #plot the mean
+  stat_summary(fun.data = mean_se,geom = "errorbar", size=0.5, width=0.5, color="green3", #plot the standard error
+               alpha=0.7,position = position_dodge(0.01))+
+  #theme_bw() + #make black and white
+  ylab("Ratio of Self to JEL423 TPM") +
+  xlab("RNASeq donor strain") + #change yaxis label
+  theme(legend.position = "none", #put legend under graph
+        legend.title = element_blank(), #remove legend titles
+        text = element_text(size=18),
+        axis.title.x=element_blank(), #remove Plot title
+        axis.text.y = element_text(size=18, angle=45,hjust=0.5),
+        axis.text.x = element_text(size=18, angle=45, hjust=1),
+        panel.grid.major = element_blank(), panel.background = element_blank(),
+        axis.line = element_line(colour = "black")) + theme(plot.margin = unit(c(1, 1, 1, 1), "cm")) #+ theme_cowplot(12))
+Fig1
+
+Fig1 <- ggplot(dot_data, aes(x=dot_data$X.RNA.Donor.Strain., y=dot_data$HISAT_TPM_RATIO, fill=X.RNA.Donor.Strain.)) + 
+  geom_violin() + scale_fill_manual(values = "goldenrod") + scale_y_continuous(breaks = seq(0, 9, by = 1)) + theme_bw()+ #get all data points to show but make them transparent 
+  #stat_summary(fun.y=mean,geom="point", size=5, color="green3")+ #plot the mean
+  #stat_summary(fun.data = mean_se,geom = "errorbar", size=0.5, width=0.5, color="green3", #plot the standard error
+               #alpha=0.7,position = position_dodge(0.01))+
+  theme_bw() + #make black and white
+  ylab("Ratio of Self to JEL423 TPM") +
+  xlab("RNASeq donor strain") + #change yaxis label
+  theme(legend.position = "none", #put legend under graph
+        legend.title = element_blank(), #remove legend titles
+        text = element_text(size=18),
+        axis.title.x=element_blank(), #remove Plot title
+        axis.text.y = element_text(size=18, angle=45,hjust=0.5),
+        axis.text.x = element_text(size=18, angle=45, hjust=1),
+        panel.grid.major = element_blank(), panel.background = element_blank(),
+        axis.line = element_line(colour = "black")) + theme(plot.margin = unit(c(1, 1, 1, 1), "cm")) #+ theme_cowplot(12))
+Fig1
+
+dot_data$Ratio_Class = factor(dot_data$Ratio_Class,levels=c("<0.76","0.76-1.23",">1.23256"))
+
+p<-ggplot(dot_data, aes(y=X.RNA.Donor.Strain., fill=Ratio_Class)) + 
+  geom_histogram(color="black", stat = "count", position = "dodge") + #theme_bw() + #make black and white
+  ylab("Gene Counts within each Ratio Class") +  #change yaxis label
+  theme(legend.position = "bottom", #put legend under graph
+        legend.title = element_blank(), #remove legend titles
+        text = element_text(size=18),
+        axis.title.x=element_blank(), #remove Plot title
+        axis.text.y = element_text(size=0, angle=45,hjust=0.5),
+        axis.text.x = element_text(size=18, angle=45, hjust=1)) + theme(plot.margin = unit(c(1, 1, 1, 1), "cm"),panel.background = element_blank()) #+ theme_bw
+
+p
+
+plot_grid(Fig1, p, labels = c('A', 'B'), ncol=2)
+
+Fig2 <-ggplot(dot_data, aes(x=dot_data$X.RNA.Donor.Strain., y=dot_data$HISAT_TPM_RATIO, col=dot_data$X.RNA.Donor.Strain.))+ geom_boxplot(fill="gray")+
+  geom_point(size=1, alpha=0.5)+ #get all data points to show but make them transparent 
+  stat_summary(fun.y=mean,geom="point", size=0.1)+ #plot the mean
+  stat_summary(fun.data = mean_se,geom = "errorbar", size=0.5, width=0.5, #plot the standard error
+               alpha=0.7,position = position_dodge(0.01))+
+  theme_bw() + #make black and white
+  ylab("Ratio of Self to JEL423 TPM") +  #change yaxis label
+  theme(legend.position = "bottom", #put legend under graph
+        legend.title = element_blank(), #remove legend titles
+        text = element_text(size=18),
+        axis.title.x=element_blank(), #remove Plot title
+        axis.text.y = element_text(size=18, angle=45,hjust=0.5),
+        axis.text.x = element_text(size=18, angle=45, hjust=1))   + theme(plot.margin = unit(c(3, 1, 1, 3), "cm"))
+Fig2
+
+
+ggplot(dot_data, aes(x=Ratio_Class, y=dot_data$HISAT_TPM_RATIO,fill=dot_data$X.RNA.Donor.Strain.)) + 
+  geom_violin()+geom_sina(size = 2.1)+
+  stat_summary(fun.y=mean,geom="point", size=0.1)+ #plot the mean
+  stat_summary(fun.data = mean_se,geom = "errorbar", size=0.5, width=0.5, #plot the standard error
+               alpha=0.7,position = position_dodge(0.01))+
+  theme_bw() + #make black and white
+  ylab("Ratio of Self to JEL423 TPM") +  #change yaxis label
+  theme(legend.position = "bottom", #put legend under graph
+        legend.title = element_blank(), #remove legend titles
+        text = element_text(size=18),
+        axis.title.x=element_blank(), #remove Plot title
+        axis.text.y = element_text(size=18, angle=45,hjust=0.5),
+        axis.text.x = element_text(size=18, angle=45, hjust=1)) + geom_dotplot(binaxis='y', stackdir='center') + theme(plot.margin = unit(c(3, 1, 1, 3), "cm"))
+
+Corr_data <- read.csv("Hisat2_CLFT044_JEL423_PID.csv", row.names=NULL)
+Corr_data$TPM_Variance
+
+#install.packages("ggpubr")
+library(ggpubr)
+
+
+
+cor.test(Corr_data$PID, Corr_data$Variance, method = "pearson", use = "complete.obs")
+
+ggplot(Corr_data, aes(x=PID, y=Variance)) + stat_poly_eq(use_label(c("eq", "adj.R2", "f", "p", "n"))) + geom_point() + geom_smooth(method="auto", se=TRUE, fullrange=FALSE, level=0.95) +
+  theme_bw() + #make black and white
+  ylab("Variance between Average TPM (Aligned to REF Vs. Self)")
+
+PID <- ggscatter(Corr_data, x = "PID", y = "TPM_Variance", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "pearson",
+          xlab = "PID", ylab = "Variance between TPM (REF vs Self)")
+
+Corr_data <- read.csv("Hisat2_CLFT044_JEL423_ggsearch_library.csv", row.names=NULL)
+Corr_data2$
+Alignment_L <- ggscatter(Corr_data, x = "Alignment_Length", y = "Variance", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "pearson",
+          xlab = "Alignment Length", ylab = "Variance between TPM (REF vs Self)")
+
+Length_variance <- ggscatter(Corr_data, x = "Lenth_Variance", y = "Variance", 
+                         add = "reg.line", conf.int = TRUE, 
+                         cor.coef = TRUE, cor.method = "pearson",
+                         xlab = "Length Variance", ylab = "Variance between TPM (REF vs Self)")
+
+Gaps <- ggscatter(Corr_data, x = "gap_openings", y = "Variance", 
+                             add = "reg.line", conf.int = TRUE, 
+                             cor.coef = TRUE, cor.method = "pearson",
+                             xlab = "Gap Openings", ylab = "Variance between TPM (REF vs Self)")
+plot_grid(PID, Alignment_L, Length_variance, Gaps, labels = c('A', 'B', 'C', 'D'), ncol=2)
+
+Corr_data2 <- read.csv("Hisat2_CLFT044_JEL423_ggsearch_BLASTcounts_library.csv", row.names=NULL)
+Corr_data2
+BLAST_counts <- ggscatter(Corr_data2, x = "BLAST_Hits", y = "Variance", 
+                             add = "reg.line", conf.int = TRUE, 
+                             cor.coef = TRUE, cor.method = "pearson",
+                             xlab = "# Blast Hits", ylab = "Variance between TPM (REF vs Self)")
+
+BLAST_counts
+Corr_data3 <- read.csv("Hisat_TPM_TPMRATIO.csv", row.names=NULL)
+Corr_data3
+
+TPM_relate <- ggscatter(Corr_data3, x = "Average_TPM", y = "Variance", 
+                          add = "reg.line", conf.int = TRUE, 
+                          cor.coef = TRUE, cor.method = "pearson",
+                          xlab = "Average TPM of CLFT044 gene", ylab = "Variance between TPM (REF vs Self)")
+
+TPM_relate
+
+Exons <- read.table("JEL423_Exon_Lengths.csv", sep=",", header=TRUE,check.names=FALSE, stringsAsFactor=F)
+Exons
+
+library(tidyverse)
+
+total <- inner_join(Exons, Corr_data, by="JEL423_ID")
+dim(total)
+total
+
+write.table(total, file = "ggsearch_Exons_JEL423_hisat.csv", sep = ",")
+
+corr_data <- read.table("ggsearch_Exons_JEL423_hisat.csv", sep=",", header=TRUE,check.names=FALSE, stringsAsFactor=F)
+corr_data$CLFT044_ID
+
+Exons2 <- read.table("CLFT044_Exon_Lengths.csv", sep=",", header=TRUE,check.names=FALSE, stringsAsFactor=F)
+Exons2$CLFT044_ID
+
+total <- inner_join(Exons2, corr_data, by="CLFT044_ID")
+dim(total)
+total
+
+write.table(total, file = "ggsearch_Exons_hisat.csv", sep = ",")
+
+Exons_relate <- ggscatter(Exons, x = "Exon_Length", y = "Variance", 
+                        add = "reg.line", conf.int = TRUE, 
+                        cor.coef = TRUE, cor.method = "pearson",
+                        xlab = "JEL423 Exon Lengths", ylab = "Variance between TPM (REF vs Self)")
+
+Exons$Average_CLFT044_HISAT2_CLFT044
+
+Exons_relate <- ggscatter(Exons, x = "CLFT044_end", y = "Average_CLFT044_HISAT2_CLFT044", 
+                          add = "reg.line", conf.int = TRUE, 
+                          cor.coef = TRUE, cor.method = "pearson",
+                          xlab = "CLFT044 gene length", ylab = "Average CLFT044 TPM")
+
+Exons_relate
+
+plot_grid(PID, Alignment_L, Length_variance, Gaps, BLAST_counts, TPM_relate, labels = c('A', 'B', 'C', 'D', 'E', 'F'), ncol=3)
+
+Corr_data <- read.table("ggsearch_Exons_JEL423_hisat.csv", sep=",", header=TRUE,check.names=FALSE, stringsAsFactor=F)
+
+observations <- read_csv("Hisat2_CLFT044_JEL423_ggsearch_BLASTcounts_library.csv",col_names = TRUE) %>% 
+  mutate(JEL423LEN=abs(JEL423_end-JEL423_start),
+         CLFT044LEN=abs(CLFT044_end-CLFT044_start),
+  ) %>% mutate(LENRATIO = CLFT044LEN / JEL423LEN) %>%
+  mutate(EXON_LEN = CLFT044_exon_size / JEL423_Exon_Length)
+  
+
+summary(observations)
+observations$
+
+p <- ggplot(observations,aes(x=LENRATIO,y=HISAT_TPM_RATIO)) + geom_point() + theme_cowplot(12)
+p <- ggplot(observations,aes(x=EXON_LEN,y=HISAT_TPM_RATIO)) + geom_point() + theme_cowplot(12)
+p
+
+
+model <- lm(HISAT_TPM_RATIO ~ Average_CLFT044_HISAT2_CLFT044 + PID.x + LENRATIO,data=observations)
+summary(model)
+
+summary(model)$coefficient
+
+observations$bit_score
+
+p2 <- ggscatter(observations, x = "LENRATIO", y = "HISAT_TPM_RATIO", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "pearson",
+          xlab = "Ratio of CLFT044 to JEL423 gene Length", ylab = "Ratio of CLFT044 to JEL423 alignment TPM")
+p2
+
+p3 <- ggscatter(observations, x = "PID.x", y = "LENRATIO", 
+                add = "reg.line", conf.int = TRUE, 
+                cor.coef = TRUE, cor.method = "pearson",
+                xlab = "PID", ylab = "Ratio of CLFT044 to JEL423 alignment TPM")
+p3
+
+p4 <- ggscatter(observations, x = "LENRATIO", y = "EXON_LEN", 
+                add = "reg.line", conf.int = TRUE, 
+                cor.coef = TRUE, cor.method = "pearson",
+                xlab = "Average TPM of CLFT044 gene", ylab = "Ratio of CLFT044 to JEL423 alignment TPM")
+p4
+
+p1 <- ggscatter(observations, x = "LENRATIO", y = "HISAT_TPM_RATIO", color = "Ratio_Class", fill ="Ratio_Class", 
+                add = "reg.line", conf.int = TRUE, 
+                cor.coef = TRUE, cor.method = "pearson",
+                xlab = "Ratio of CLFT044 to JEL423 gene Length", ylab = "Ratio of CLFT044 to JEL423 alignment TPM",
+                palette= c("#F8766D", "#00A9FF","#0CB702"))
+p1
+
+p2 <- ggscatter(observations, x = "PID.x", y = "HISAT_TPM_RATIO", color = "Ratio_Class",
+                add = "reg.line", conf.int = TRUE, 
+                cor.coef = TRUE, cor.method = "pearson",
+                xlab = "Percent ID between Homologs", ylab = "Ratio of CLFT044 to JEL423 alignment TPM",
+                palette= c("#F8766D", "#00A9FF","#0CB702"))
+p2
+
+p3 <- ggscatter(observations, x = "bit_score", y = "HISAT_TPM_RATIO", color = "Ratio_Class",
+                add = "reg.line", conf.int = TRUE, 
+                cor.coef = TRUE, cor.method = "pearson",
+                xlab = "bitscore between Homologs", ylab = "Ratio of CLFT044 to JEL423 alignment TPM",
+                palette= c("#F8766D", "#00A9FF","#0CB702"))
+p3
+
+p4 <- ggscatter(observations, x = "mismatches", y = "HISAT_TPM_RATIO", color = "Ratio_Class",
+                add = "reg.line", conf.int = TRUE, 
+                cor.coef = TRUE, cor.method = "pearson",
+                xlab = "mismatches between Homologs", ylab = "Ratio of CLFT044 to JEL423 alignment TPM",
+                palette= c("#F8766D", "#00A9FF","#0CB702"))
+p4
+
+p5 <- ggscatter(observations, x = "gap_openings", y = "HISAT_TPM_RATIO", color = "Ratio_Class",
+                add = "reg.line", conf.int = TRUE, 
+                cor.coef = TRUE, cor.method = "pearson",
+                xlab = "gap openings between Homologs", ylab = "Ratio of CLFT044 to JEL423 alignment TPM", 
+                palette= c("#F8766D", "#00A9FF","#0CB702"))
+p5
+
+BLAST_counts <- ggscatter(Corr_data2, x = "BLAST_Hits", y = "HISAT_TPM_RATIO", color = "Ratio_Class", fill = "Ratio_Class",
+                          add = "reg.line", conf.int = TRUE, 
+                          cor.coef = TRUE, cor.method = "pearson",
+                          xlab = "# Blast Hits", ylab = "Ratio of CLFT044 to JEL423 alignment TPM",
+                          palette= c("#F8766D", "#00A9FF","#0CB702"))
+
+BLAST_counts
+
+plot_grid(p1, p2, BLAST_counts, labels=c('A', 'B', 'C'), ncol=3)
+
+
+p<-ggplot(observations, aes(x=Ratio_Class, y=LENRATIO, color=Ratio_Class)) +
+  geom_boxplot()#+ geom_jitter(shape=16, position=position_jitter(0.2))
+p
+
+## Anova
+library(readr)
+split_obs = split(observations$LENRATIO, f = observations$Ratio_Class)
+
+observations$gap_openings
+
+anova(split_obs)
+anova(GPL)        
+fit = lm(LENRATIO ~ Ratio_Class * PID.x * mismatches * gap_openings, data = observations)
+class(fit)
+anova(fit)
+
+model <- aov(HISAT_TPM_RATIO ~ LENRATIO * PID.x * mismatches * gap_openings, data = observations)
+model
+summary(model)
+
+
+## What about the comparisons between BdBRAZIL and GPL? Does CLFT044 really make a better ref?
+Comparisons <- read.table("Overall_Hisat_strains.csv", sep=",", header=TRUE,check.names=FALSE, stringsAsFactor=F)
+Comparisons$`Reference Genome`
+
+boxp<-ggplot(Comparisons, aes(x=`RNA Donor Strain`, y=`HISAT Alignment`, color=`Reference Genome`)) +
+  geom_boxplot()+ geom_jitter(shape=16, position=position_jitter(0.2)) +
+  scale_color_manual(values = c("goldenrod","deeppink")) + theme_bw() +
+  theme(axis.text.x=element_text(size=18, face="bold",color = c("goldenrod3","goldenrod3","goldenrod3","goldenrod3","deeppink3","deeppink3")),
+        axis.title.y = element_text(size=18, face = "bold"),
+        axis.text.y=element_text(size=18, face="bold"),
+        axis.title.x = element_text(size=18, face = "bold"),
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.key.size = unit(2, 'cm'),
+        legend.key.height = unit(2, 'cm'),
+        legend.key.width = unit(2, 'cm'),
+        legend.title = element_text(size=14),
+        legend.text = element_text(size=12))
+boxp
+
+theme(legend.position = "none", #put legend under graph
+      legend.title = element_blank(), #remove legend titles
+      text = element_text(size=18),
+      axis.title.x=element_blank(), #remove Plot title
+      axis.text.y = element_text(size=18, angle=45,hjust=0.5),
+      axis.text.x = element_text(size=18, angle=45, hjust=1),
+      panel.grid.major = element_blank(), panel.background = element_blank(),
+      axis.line = element_line(colour = "black")) + theme(plot.margin = unit(c(1, 1, 1, 1), "cm")) #+ theme_cowplot(12))
+
+
+
+ggplot(Comparisons, aes(x = `RNA Donor Strain`, fill = `RNA Donor Lineage`, y = `HISAT Alignment`)) +
+  geom_point(aes(shape=`Reference Genome`, color = `RNA Donor Lineage`, y = `HISAT Alignment`), position=position_dodge(width=0.3), size=3) +
+  scale_color_manual(values = c("goldenrod","deeppink"))
+
+## Let's plot the top and bottom rows of the figure
+
+middle_row <- plot_grid(NULL,Fig1,p,NULL, labels = c('','B', 'C',''),ncol=4,axis = "bt", label_size = 18,rel_widths = c(0.5,1,1,0.5) )
+top_row <- plot_grid(NULL,boxp,NULL, labels = c('','A',''),ncol=3, label_size = 18,rel_widths = c(0.5,2,0.5))
+bottom_row <- plot_grid(NULL,Venn,NULL, labels = c('','D',''), ncol=3, label_size = 18,rel_widths = c(0.5,2,0.5))
+
+
+plot_grid(top_row, middle_row,bottom_row, labels = c('','',''), label_size = 12, ncol = 1, rel_widths = c(4,4,8), rel_heights = c(4,3.5,4)) #+ 
+  theme_cowplot(12)
+
+plot_grid(top_row, middle_row, labels = c('',''), label_size = 12, ncol = 1, rel_widths = c(4,4), rel_heights = c(5,6)) #+ 
+
+middl grid(boxp,Fig1, p, Venn, labels = c('A', 'B','C','D'), ncol=2,rel_widths = c(1, 0.75,0,1.5), rel_heights = c(1,1,1,1))
+
+
+### VENN RNASEQ ##
+
+data <- read.csv("VENN.csv", header = TRUE, row.names(1), sep = ",", stringsAsFactors = FALSE)
+data$
+
+data <- as.data.frame(data)
+df2 <- data[,!names(data) %in% c("ID")]
+df2
+Matrix <- as.matrix(Data)
+
+
+library(venn)
+library(ggvenn)
+library(ggpolypath)
+Venn <- venn(df2, ggplot = TRUE,zcolor =c("gold1","blueviolet","cyan2","chartreuse4"))
+Venn
+
+df2
+ggvenn(data, c("DEGs","Alignment.error.Genes.Self.vs.Ref","GPL.Unique.PATH.Orthologs","GPL.Unique.Gene.Families"))
+
+ggvenn(df2, columns = c("DEGs","Alignment.error.Genes.Self.vs.Ref","GPL.Unique.PATH.Orthologs","GPL.Unique.Gene.Families"))
+
+data
+names(data) <- c("DEGs","Genes with reference-dependent TPMs", "GPL Specific Genes")
+
+Venn <- ggvenn(data, fill_color = c("#0073C2FF", "#EFC000FF", "#CD534CFF"), show_percentage = FALSE,text_size = 8) 
+Venn
+
+## Same with CLFT044 ##
+
+data <- read.csv("CLFT044_VENN.csv", header = TRUE, row.names(1), sep = ",", stringsAsFactors = FALSE)
+data$
+
+data <- as.data.frame(data)
+df2 <- data[,!names(data) %in% c("CLFT044_ID")]
+df2
+Matrix <- as.matrix(Data)
+
+
+library(venn)
+library(ggvenn)
+library(ggpolypath)
+Venn <- venn(df2, ggplot = TRUE,zcolor =c("gold1","blueviolet","cyan2","chartreuse4"))
+Venn
+
+df2
+ggvenn(data, c("DEGs","Alignment.error.Genes.Self.vs.Ref","GPL.Unique.PATH.Orthologs","GPL.Unique.Gene.Families"))
+
+ggvenn(df2, columns = c("DEGs","Alignment.error.Genes.Self.vs.Ref","GPL.Unique.PATH.Orthologs","GPL.Unique.Gene.Families"))
+
+data
+names(data) <- c("DEGs","Genes with reference-dependent TPMs", "BRAZIL Specific Genes")
+
+CLFT044_Venn <- ggvenn(data, fill_color = c("#0073C2FF", "#EFC000FF", "#CD534CFF"), show_percentage = FALSE, text_size = 8) 
+CLFT044_Venn
+
+plot_grid(Venn, CLFT044_Venn, labels = c('A','B'), label_size = 12, ncol = 2, rel_widths = c(4,4))
